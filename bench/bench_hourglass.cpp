@@ -13,6 +13,7 @@ inline std::vector<std::pair<uint64_t, uint64_t>> SampleQueries(std::vector<std:
     {
         sample_queries.push_back(queries[i]);
     }
+    return sample_queries;
 }
 
 template <typename t_itr>
