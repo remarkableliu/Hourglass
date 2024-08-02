@@ -22,8 +22,6 @@
 #include "bench_utils.hpp"
 #include <argparse/argparse.hpp>
 
-static const std::vector<std::string> kdist_names = {"kuniform", "knormal"};
-static const std::vector<std::string> kdist_default = {"kuniform"};
 static const std::vector<std::string> qdist_names = {"quniform", "qnormal", "qcorrelated", "qtrue", "qadapt-uniform", "qadapt-corr"};
 static const std::vector<std::string> qdist_default = {"quniform", "qcorrelated"};
 
@@ -37,12 +35,10 @@ bool allow_true_queries = false;
 bool mixed_queries = false;
 
 auto default_n_keys = 15'938'355;
-// auto default_n_keys = 40'000'000;
 auto default_n_queries = 1'000'000;
-// auto default_range_size = std::vector<int>{0, 5, 10}; /* {point queries, 2^{5}, 2^{10}}*/
-auto default_range_size = std::vector<int>{0, 5, 10}; 
+auto default_range_size = std::vector<int>{0, 5, 10}; /* {point queries, 2^{5}, 2^{10}}*/
 auto default_corr_degree = 1.0;
-auto default_as_ratio = 0;
+auto default_uq_ratio = 0;
 
 InputKeys<uint64_t> keys_from_file = InputKeys<uint64_t>();
 
@@ -229,7 +225,7 @@ std::vector<double> calculatePowerLawProbabilities(const size_t n_unique, double
 
 Workload<uint64_t> generate_synth_queries(const std::string& qdist, InputKeys<uint64_t> &keys,
                                           uint64_t n_queries, uint64_t min_range, uint64_t max_range,
-                                          const double corr_degree, const long double stddev, const size_t as_ratio) {
+                                          const double corr_degree, const long double stddev, const size_t uq_ratio) {
     std::vector<uint64_t> middle_points;
 
     if (qdist == "qnormal")
@@ -298,8 +294,8 @@ Workload<uint64_t> generate_synth_queries(const std::string& qdist, InputKeys<ui
         q.emplace(left, right, q_result);
         printProgress(((double) q.size()) / n_queries);
     }
-    if ((qdist == "qadapt-uniform" || qdist == "qadapt-corr") && as_ratio != 0) {
-        auto n_q = n_queries * as_ratio;
+    if ((qdist == "qadapt-uniform" || qdist == "qadapt-corr") && uq_ratio != 0) {
+        auto n_q = n_queries * uq_ratio;
         auto zipfianProbabilities = calculatePowerLawProbabilities(n_queries, 0.5);
         std::discrete_distribution<uint64_t> zipf_distribution(zipfianProbabilities.begin(), zipfianProbabilities.end());
         std::mt19937 zipf_generator(seed);
@@ -320,14 +316,14 @@ Workload<uint64_t> generate_synth_queries(const std::string& qdist, InputKeys<ui
 
 Workload<uint64_t> generate_synth_queries(const std::string& qdist, InputKeys<uint64_t> &keys,
                                           uint64_t n_queries, uint64_t range_size,
-                                          const double corr_degree, const long double stddev, const size_t as_ratio) {
-    return generate_synth_queries(qdist, keys, n_queries, range_size, range_size, corr_degree, stddev, as_ratio);
+                                          const double corr_degree, const long double stddev, const size_t uq_ratio) {
+    return generate_synth_queries(qdist, keys, n_queries, range_size, range_size, corr_degree, stddev, uq_ratio);
 }
 
 void generate_synth_datasets(const std::vector<std::string> &kdist, const std::vector<std::string> &qdist,
                              uint64_t n_keys, uint64_t n_queries,
                              std::vector<int> range_size_list, // uint64_t min_range, uint64_t max_range,
-                             const double corr_degree = 1, const size_t as_ratio = 1,
+                             const double corr_degree = 1, const size_t uq_ratio = 1,
                              const long double stddev = (long double) UINT64_MAX * 0.1) {
     std::vector<uint64_t> ranges(range_size_list.size());
     std::transform(range_size_list.begin(), range_size_list.end(), ranges.begin(), [](auto v) {
@@ -343,7 +339,7 @@ void generate_synth_datasets(const std::vector<std::string> &kdist, const std::v
     std::copy(qdist.begin(), qdist.end(), std::ostream_iterator<std::string>(std::cout, ","));
     std::cout << std::endl;
     std::cout << "[+] corr_degree=" << corr_degree << std::endl;
-    std::cout << "[+] as_ratio=" << as_ratio << std::endl;
+    std::cout << "[+] uq_ratio=" << uq_ratio << std::endl;
 
 
     for (const auto& k: kdist) {
@@ -355,7 +351,7 @@ void generate_synth_datasets(const std::vector<std::string> &kdist, const std::v
             for (auto i = 0; i < ranges.size(); i++) {
                 auto range_size = ranges[i];
                 auto queries = (q == "qtrue") ? generate_true_queries(keys, n_queries, range_size) :
-                        generate_synth_queries(q, keys, n_queries, range_size, range_size, corr_degree, stddev, as_ratio);
+                        generate_synth_queries(q, keys, n_queries, range_size, range_size, corr_degree, stddev, uq_ratio);
                 std::cout << std::endl
                           << "[+] generated `" << q << "_" << range_size_list[i] << "` queries" << std::endl;
                 std::string queries_path = root_path + std::to_string(range_size_list[i]) + "_" + q + "/";
@@ -379,7 +375,7 @@ void generate_synth_datasets(const std::vector<std::string> &kdist, const std::v
                 auto range_size_min = 1;
 
                 auto queries = (q == "qtrue") ? generate_true_queries(keys, n_queries, range_size, true) :
-                               generate_synth_queries(q, keys, n_queries, range_size_min, range_size, corr_degree, stddev, as_ratio);
+                               generate_synth_queries(q, keys, n_queries, range_size_min, range_size, corr_degree, stddev, uq_ratio);
 
                 auto queries_path = root_path + std::to_string(range_size_list.back()) + "M_" + q + "/"; /* mixed */
                 if (!create_dir_recursive(queries_path))
@@ -447,25 +443,7 @@ generate_real_queries(std::vector<uint64_t> &data, uint64_t n_keys, uint64_t n_q
                    [](const std::pair<uint64_t, int> &p) { return p.second; });
     std::sort(indexes.begin(), indexes.end());
 
-    // std::size_t keys_pool_size = 0;
     std::vector<uint64_t> keys;
-    // std::vector<uint64_t> keys_pool;
-    // keys_pool.reserve(data.size() - n_queries);
-    // auto it = indexes.begin();
-    // for (auto i = 0; i < data.size(); i++) {
-    //     if (i != *it) {
-    //         if (i + 1 == *it) {
-    //             keys.insert(data[i]);
-    //         }
-    //         else {
-    //             keys_pool.push_back(data[i]);
-    //             keys_pool_size++;
-    //         }
-    //     }
-    //     else if (it != indexes.end())
-    //         ++it;
-    // }
-
     keys.reserve(data.size() - n_queries);
     auto it = indexes.begin();
     for (auto i = 0; i < data.size(); i++) {
@@ -625,7 +603,7 @@ int main(int argc, char const *argv[]) {
     parser.add_argument("--as-ratio")
             .help("A/S ratio for adaptive workloads")
             .required()
-            .default_value(size_t(default_as_ratio))
+            .default_value(size_t(default_uq_ratio))
             .scan<'u', size_t>();
 
     try {
@@ -654,7 +632,7 @@ int main(int argc, char const *argv[]) {
     auto n_queries = parser.get<uint64_t>("-q");
     auto ranges_int = parser.get<std::vector<int>>("--range-size");
     auto corr_degree = parser.get<double>("--corr-degree");
-    auto as_ratio = parser.get<size_t>("--as-ratio");
+    auto uq_ratio = parser.get<size_t>("--as-ratio");
 
     allow_true_queries = parser.get<bool>("--allow-true");
     mixed_queries = parser.get<bool>("--mixed");
@@ -672,7 +650,7 @@ int main(int argc, char const *argv[]) {
 
     }
     else
-        generate_synth_datasets(kdist, qdist, n_keys, n_queries, ranges_int, corr_degree, as_ratio);
+        generate_synth_datasets(kdist, qdist, n_keys, n_queries, ranges_int, corr_degree, uq_ratio);
 
     return 0;
 }

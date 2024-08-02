@@ -19,8 +19,21 @@ add_library(
 add_executable(hourglass example.cpp hashutil.h hashutil.cc)
 
 target_link_libraries(hourglass OpenSSL::SSL OpenSSL::Crypto)
+
 target_include_directories(hourglass PRIVATE /usr/lib/openssl)
 
 target_link_libraries(Hourglass OpenSSL::SSL OpenSSL::Crypto)
 
 target_include_directories(Hourglass PRIVATE /usr/lib/openssl)
+
+add_subdirectory(bench)
+
+# if (BUILD_EXAMPLES)
+#     message(STATUS "Building examples")
+#     add_subdirectory(examples)
+# endif ()
+
+# if (BUILD_BENCHMARKS)
+#     message(STATUS "Building benchmarks")
+#     add_subdirectory(bench)
+# endif ()

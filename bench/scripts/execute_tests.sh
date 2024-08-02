@@ -19,10 +19,10 @@
 #
 
 if [ "$#" -ne 2 ]; then
-    echo "Illegal number of parameters, usage: execute_tests.sh <grafite_path> <datasets_path>"
+    echo "Illegal number of parameters, usage: execute_tests.sh <build_path> <datasets_path>"
 fi
 
-GRAFITE_BUILD_PATH=$(realpath $1)
+BUILD_PATH=$(realpath $1)
 WORKLOADS_PATH=$(realpath $2)
 
 
@@ -31,45 +31,41 @@ ARGS="" # uncomment to run without numa
 
 SCRIPT_DIR_PATH=$(dirname -- "$( readlink -f -- "$0"; )")
 
-OUT_PATH=./results
 
-# mkdir -p $OUT_PATH && cd $OUT_PATH || exit 1
+if ! python3 $SCRIPT_DIR_PATH/test.py $ARGS --test corr $WORKLOADS_PATH/corr_test $BUILD_PATH ; then
+  echo "[!!] corr_test test failed"
+  exit 1
+fi
+echo "[!!] corr_test test executed successfully"
 
-# if ! python3 $SCRIPT_DIR_PATH/test.py $ARGS --test corr $WORKLOADS_PATH/corr_test $GRAFITE_BUILD_PATH ; then
-#   echo "[!!] corr_test test failed"
-#   exit 1
-# fi
-# echo "[!!] corr_test (figure 1,3) test executed successfully"
-
-if ! python3 $SCRIPT_DIR_PATH/test.py $ARGS --test adapt $WORKLOADS_PATH/adapt_test $GRAFITE_BUILD_PATH ; then
+if ! python3 $SCRIPT_DIR_PATH/test.py $ARGS --test adapt $WORKLOADS_PATH/adapt_test $BUILD_PATH ; then
   echo "[!!] adapt_test test failed"
   exit 1
 fi
 echo "[!!] adapt_test test executed successfully"
 
+if ! python3 $SCRIPT_DIR_PATH/test.py $ARGS --test fpr $WORKLOADS_PATH/fpr_test $BUILD_PATH ; then
+  echo "[!!] fpr_test test failed"
+  exit 1
+fi
+echo "[!!] fpr_test test executed successfully"
 
-# if ! python3 $SCRIPT_DIR_PATH/test.py $ARGS --test fpr $WORKLOADS_PATH/fpr_test $GRAFITE_BUILD_PATH ; then
-#   echo "[!!] fpr_test test failed"
-#   exit 1
-# fi
-# echo "[!!] fpr_test (figure 4,5) test executed successfully"
+if ! python3 $SCRIPT_DIR_PATH/test.py $ARGS --test fpr_real $WORKLOADS_PATH/fpr_real_test $BUILD_PATH ; then
+  echo "[!!] fpr_real_test test failed"
+  exit 1
+fi
+echo "[!!] fpr_real_test test executed successfully"
 
-# if ! python3 $SCRIPT_DIR_PATH/test.py $ARGS --test fpr_real $WORKLOADS_PATH/fpr_real_test $GRAFITE_BUILD_PATH ; then
-#   echo "[!!] fpr_real_test test failed"
-#   exit 1
-# fi
-# echo "[!!] fpr_real_test (figure 4,5) test executed successfully"
+if ! python3 $SCRIPT_DIR_PATH/test.py $ARGS --test true $WORKLOADS_PATH/true_test $BUILD_PATH ; then
+  echo "[!!] query_time_test test failed"
+  exit 1
+fi
+echo "[!!] query_time_test test executed successfully"
 
-# if ! python3 $SCRIPT_DIR_PATH/test.py $ARGS --test true $WORKLOADS_PATH/true_test $GRAFITE_BUILD_PATH ; then
-#   echo "[!!] query_time_test test failed"
-#   exit 1
-# fi
-# echo "[!!] query_time_test (figure 6) test executed successfully"
-
-# if ! python3 $SCRIPT_DIR_PATH/test.py $ARGS --test constr_time $WORKLOADS_PATH/constr_time_test $GRAFITE_BUILD_PATH ; then
-#   echo "[!!] constr_time_test test failed"
-#   exit 1
-# fi
-# echo "[!!] constr_time_test (figure 7) test executed successfully"
+if ! python3 $SCRIPT_DIR_PATH/test.py $ARGS --test constr_time $WORKLOADS_PATH/constr_time_test $BUILD_PATH ; then
+  echo "[!!] constr_time_test test failed"
+  exit 1
+fi
+echo "[!!] constr_time_test test executed successfully"
 
 echo "[!!] success, all tests executed"

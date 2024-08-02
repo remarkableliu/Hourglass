@@ -30,10 +30,7 @@ membind = 0
 physcpubind = 16
 
 # ds_list = ['hourglass', 'oasis', "grafite", "bucketing", "surf", "rosetta", "snarf", "proteus", 'rencoder', 'rencoder_ss', 'rencoder_se', 'bloomrf']
-# ds_list = ['hourglass', 'oasis', "grafite", "bucketing", "surf", "rosetta", "snarf", "proteus", 'bloomrf', 'rencoder_se']
-ds_list = ['snarf', "surf"]
-# ds_list = ["rencoder_se"]
-# ds_list_with_bucketing = ds_list.copy() + ['bucketing']
+ds_list = ['hourglass', 'oasis', "grafite", "bucketing", "surf", "rosetta", "snarf", "proteus", 'bloomrf', 'rencoder_se']
 
 ds_benchmark_executables = {}
 
@@ -64,37 +61,10 @@ ds_parameters_small_universe = {'grafite': list(np.linspace(7, 12, 6)),  # eps
                                 'hourglass': list(np.linspace(7, 12, 6))}  # bpk
 
 
-# Format of the test directories for bulk testing
-# [test] ---> [{dataset name}] ---> keys.bin
-#                              |
-#                              ---> [{range_size (as power of 2)}_{name (optional)}]
-# e.g.
-# [test] ---> [uniform] ---> keys.bin
-#       |               |
-#       |               ---> [10_uniform] ---> left, right
-#       |               |
-#       |               ---> [16_correlated] ---> left, right
-#       |
-#        ---> [osm] ---> ...
-#
-# Format of the output
-# [out/{datetime}] -->  [{name}] --> [{range_size (as power of 2)}_{name}] --> {ds_name}.csv
-#
-# e.g.
-# [out/2023-01-01 09:00:00] --> [uniform] --> [10_uniform] --> surf.csv, rosetta.csv, ...
-#                           |
-#                           --> [osm] --> ...
-#
-
 def execute_test(ds, keys_path, data, path_csv):
     print(keys_path)
 
-    if keys_path and 'fb' in str(keys_path):
-        # param = ds_parameters_small_universe[ds]
-        param = ds_parameters[ds]
-        data["corr_degree"]=10
-    else:
-        param = ds_parameters[ds]
+    param = ds_parameters[ds]
 
     for arg in param:
         if 'rosetta' not in ds and use_numa:
@@ -226,7 +196,6 @@ if __name__ == "__main__":
             'error, the grafite dir does not exists')
 
     if test_name == 'fpr' or test_name == 'fpr_real':
-        # ds_list = ds_list_with_bucketing
         pass
     elif test_name == 'lemma':
         ds_list = ['grafite']
@@ -245,30 +214,18 @@ if __name__ == "__main__":
                          'oasis': [20], # bpk
                          'hourglass': [20]}  # bpk
     elif test_name == 'adapt':
-        ds_parameters = {'grafite': [ 11.5, 13.5, 15.5, 17.4, 19.2],
-                         'bucketing': [ 11.5, 13.5, 15.5, 17.4, 19.2 ], # eps
-                         'surf': [4, 6, 8, 10, 12],  # suffix bits
-                         'snarf': list(np.linspace(12, 20, 5)),  # bpk
-                         'rosetta': [20],  # bpk
-                         'proteus': [20],
-                         'rencoder': list(np.linspace(10, 18, 5)),  # bpk
-                         'rencoder_ss': list(np.linspace(10, 18, 5)),  # bpk
-                         'rencoder_se': [20],   # bpk
-                         'bloomrf': [20],   # bpk
-                         'oasis': [20], # bpk
-                         'hourglass': [20]}  # bpk
-        # ds_parameters = {'grafite': [16],
-        #                  'bucketing': [16], # eps
-        #                  'surf': [8],  # suffix bits
-        #                  'snarf': [16],  # bpk
-        #                  'rosetta': [16],  # bpk
-        #                  'proteus': [16],
-        #                  'rencoder': [16],  # bpk
-        #                  'rencoder_ss': [16],  # bpk
-        #                  'rencoder_se': [16],   # bpk
-        #                  'bloomrf': [16],   # bpk
-        #                  'oasis': [16], # bpk
-        #                  'hourglass': [16]}  # bpk
+        ds_parameters = {'grafite': [16],
+                         'bucketing': [16], # eps
+                         'surf': [8],  # suffix bits
+                         'snarf': [16],  # bpk
+                         'rosetta': [16],  # bpk
+                         'proteus': [16],
+                         'rencoder': [16],  # bpk
+                         'rencoder_ss': [16],  # bpk
+                         'rencoder_se': [16],   # bpk
+                         'bloomrf': [16],   # bpk
+                         'oasis': [16], # bpk
+                         'hourglass': [16]}  # bpk
     elif test_name == 'constr_time':
         ds_parameters = {'grafite': [24],
                          'bucketing': [24], # eps
