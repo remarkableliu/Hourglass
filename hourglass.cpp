@@ -12,6 +12,30 @@
 #define MASK128(i) (((__uint128_t)1 << i) - 1)
 #define POW(i) (1ULL << i)
 
+uint64_t getNextPow2(uint64_t n)
+{
+    n--;
+	n |= n >> 1;
+	n |= n >> 2;
+	n |= n >> 4;
+	n |= n >> 8;
+	n |= n >> 16;
+	n |= n >> 32;
+	n++;
+	return n;
+}
+
+uint64_t getTrailingZero(uint64_t n)
+{
+    int i = 0;
+    while (n != 0)
+    {
+        n = n >> 1;
+        i++;
+    }
+    return i - 1;
+}
+
 using namespace std;
 
 const size_t kMaxCuckooCount = 500;
@@ -42,7 +66,7 @@ class Hourglass
     uint64_t** value_table_;
     uint64_t current_value_;
 #ifdef ADAPT
-    static const size_t selector_len_ = 2;
+    static const size_t selector_len_ = 1;
     uint64_t* hash_selector_multi_[selector_len_];
     rank_multi rm_selector_;
 #endif
@@ -75,7 +99,7 @@ class Hourglass
         if (corr_degree > 1 || corr_degree < 0)
             throw std::runtime_error("error, illegal correlated degree.");
 #ifdef ADAPT
-        std::cout << "[+] adapt open." << std::endl;
+        std::cout << "[+] adaptivity used." << std::endl;
 #endif
 
         auto num_keys = std::distance(begin, end);

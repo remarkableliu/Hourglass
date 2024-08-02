@@ -16,8 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "../bench_template.hpp"
-#include "../include/Hourglass/hourglass.cpp"
+#include "bench_template.hpp"
+#include "../hourglass.cpp"
 /**
  * This file contains the benchmark for the bloomrf filter.
  */
