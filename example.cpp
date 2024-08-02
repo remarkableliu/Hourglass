@@ -42,8 +42,8 @@ int main()
         if (h.Lookup_Adaptive(queries[i].first, queries[i].second))
             fp++;
     }
-    std::cout << fp / (double)n_queries << std::endl;
-    std::cout << h.size() / (double)n_keys << std::endl;
+    std::cout << "FPR: " << fp / (double)n_queries << std::endl;
+    std::cout << "BPK: " << h.size() / (double)n_keys << std::endl;
 
     return 0;
 }
