@@ -1,14 +1,56 @@
-#include "bench_template.hpp"
+#include "./bench_template.hpp"
 #include "../hourglass.cpp"
+
+
+inline std::vector<std::pair<uint64_t, uint64_t>> SampleQueries(std::vector<std::pair<uint64_t, uint64_t>> queries, double sample_rate) {
+    std::vector<std::pair<uint64_t, uint64_t>> sample_queries;
+
+    std::mt19937 generator(std::random_device{}());
+    std::shuffle(queries.begin(), queries.end(), generator);
+    auto sample_size = queries.size() * sample_rate;
+    
+    for (size_t i = 0; i < sample_size; i++)
+    {
+        sample_queries.push_back(queries[i]);
+    }
+}
+
+inline int EsitimateCorrDegree(std::vector<std::pair<uint64_t, uint64_t>> queries, size_t range_size) {
+    auto interval = 1 << range_size;
+    uint64_t corr = 0;
+    for (auto pair : queries)
+    {
+        auto l = pair.first;
+        auto r = pair.second;
+
+        uint64_t distance = 0;
+        auto low = std::lower_bound(keys.begin(), keys.end(), l);
+        if (low == keys.end()) {
+            distance = l - keys.back();
+        } else {
+            distance = min(l - *(low - 1), *low - r);
+        }
+        if (distance <= interval)
+            corr++;
+    }
+    if (corr == 0)
+        return 0;
+    auto D = 1 - std::log2(queries.size() / (double) corr * interval) / 30;
+    return std::round(D * 10);
+} 
 
 template <typename t_itr, typename... Args>
 inline Hourglass init_hourglass(const t_itr begin, const t_itr end, const double bpk, Args... args)
 {
     auto&& t = std::forward_as_tuple(args...);
-    auto max_range_size = std::get<0>(t);
-    auto corr_degree = std::get<1>(t);
+    auto queries = std::get<0>(t);
+    auto max_range_size = std::get<1>(t);
+    auto sample_queries = SampleQueries(queries, 0.2);
+    start_timer(modelling_time);
+    auto D = EsitimateCorrDegree(sample_queries, max_range_size);
+    stop_timer(modelling_time);
     start_timer(build_time);
-    Hourglass f(begin, end, max_range_size, corr_degree * 0.1, bpk);
+    Hourglass f(begin, end, max_range_size, D * 0.1, bpk);
     stop_timer(build_time);
     return f;
 }
@@ -42,7 +84,7 @@ int main(int argc, char const *argv[])
 
     auto [ keys, queries, arg , range_size, corr_degree ] = read_parser_arguments(parser);
     experiment(pass_fun(init_hourglass),pass_ref(query_hourglass),
-               pass_ref(size_hourglass), arg, keys, queries, range_size, corr_degree);
+               pass_ref(size_hourglass), arg, keys, queries, queries, range_size);
     print_test();
 
     return 0;
