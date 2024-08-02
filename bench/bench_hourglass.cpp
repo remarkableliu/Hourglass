@@ -15,7 +15,8 @@ inline std::vector<std::pair<uint64_t, uint64_t>> SampleQueries(std::vector<std:
     }
 }
 
-inline int EsitimateCorrDegree(std::vector<std::pair<uint64_t, uint64_t>> queries, size_t range_size) {
+template <typename t_itr>
+inline int EsitimateCorrDegree(const t_itr begin, const t_itr end, std::vector<std::pair<uint64_t, uint64_t>> queries, size_t range_size) {
     auto interval = 1 << range_size;
     uint64_t corr = 0;
     for (auto pair : queries)
@@ -24,8 +25,8 @@ inline int EsitimateCorrDegree(std::vector<std::pair<uint64_t, uint64_t>> querie
         auto r = pair.second;
 
         uint64_t distance = 0;
-        auto low = std::lower_bound(keys.begin(), keys.end(), l);
-        if (low == keys.end()) {
+        auto low = std::lower_bound(begin, end, l);
+        if (low == end) {
             distance = l - keys.back();
         } else {
             distance = min(l - *(low - 1), *low - r);
@@ -43,8 +44,15 @@ template <typename t_itr, typename... Args>
 inline Hourglass init_hourglass(const t_itr begin, const t_itr end, const double bpk, Args... args)
 {
     auto&& t = std::forward_as_tuple(args...);
-    auto queries = std::get<0>(t);
+    auto queries_temp = std::get<0>(t);
     auto max_range_size = std::get<1>(t);
+
+    auto queries = std::vector<std::pair<uint64_t, uint64_t>>(queries_temp.size());
+    std::transform(queries_temp.begin(), queries_temp.end(), queries.begin(), [](auto x) {
+        auto [left, right, result] = x;
+        return std::make_pair(left, right);
+    });
+
     auto sample_queries = SampleQueries(queries, 0.2);
     start_timer(modelling_time);
     auto D = EsitimateCorrDegree(sample_queries, max_range_size);
