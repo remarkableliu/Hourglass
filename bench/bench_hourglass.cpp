@@ -27,7 +27,7 @@ inline int EsitimateCorrDegree(const t_itr begin, const t_itr end, std::vector<s
         uint64_t distance = 0;
         auto low = std::lower_bound(begin, end, l);
         if (low == end) {
-            distance = l - keys.back();
+            distance = l - *(end - 1);
         } else {
             distance = min(l - *(low - 1), *low - r);
         }
