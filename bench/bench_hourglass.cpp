@@ -53,9 +53,9 @@ inline Hourglass init_hourglass(const t_itr begin, const t_itr end, const double
         return std::make_pair(left, right);
     });
 
-    auto sample_queries = SampleQueries(begin, end, queries, 0.2);
+    auto sample_queries = SampleQueries( queries, 0.2);
     start_timer(modelling_time);
-    auto D = EsitimateCorrDegree(sample_queries, max_range_size);
+    auto D = EsitimateCorrDegree(begin, end, sample_queries, max_range_size);
     stop_timer(modelling_time);
     start_timer(build_time);
     Hourglass f(begin, end, max_range_size, D * 0.1, bpk);
