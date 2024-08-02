@@ -1292,10 +1292,11 @@ class Hourglass
         tags[j] = tag;
         WriteBucket(i, tags);
 
+        // we exclude the updating time of hash selector in benchmark using code above, because
+        // it only occurs at false positive, if you want to test end-to-end latency, use code below 
         // uint64_t num_ones[selector_len_];
         // rm_selector_.getNumOnes(num_ones);
         // uint64_t num_bits = num_buckets_ * bucket_size_ + 63;
-        // // TODO: delete this line and restructure this function size_t selector = ReadSelector(i, j);
         // size_t selector = rm_selector_.getBit(i * bucket_size_ + j);
         // ++selector;
         // if (selector & 0x1 == 1) {
