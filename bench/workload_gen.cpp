@@ -22,6 +22,8 @@
 #include "bench_utils.hpp"
 #include <argparse/argparse.hpp>
 
+static const std::vector<std::string> kdist_names = {"kuniform", "knormal"};
+static const std::vector<std::string> kdist_default = {"kuniform"};
 static const std::vector<std::string> qdist_names = {"quniform", "qnormal", "qcorrelated", "qtrue", "qadapt-uniform", "qadapt-corr"};
 static const std::vector<std::string> qdist_default = {"quniform", "qcorrelated"};
 
